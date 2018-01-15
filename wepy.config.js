@@ -19,7 +19,7 @@ module.exports = {
   },
   eslint: true,
   compilers: {
-    less: {
+    stylus: {
       compress: true
     },
     /*sass: {
