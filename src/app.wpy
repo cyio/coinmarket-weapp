@@ -38,4 +38,3 @@ export default class extends wepy.app {
   box-sizing: border-box;
 }
 </style>
-
