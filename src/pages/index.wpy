@@ -1,0 +1,42 @@
+<template>
+  <view class="container">
+    <text>Hello WeAPP</text>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy'
+  // import List from '../components/list'
+  // import testMixin from '../mixins/test'
+
+  export default class Index extends wepy.page {
+    config = {
+      navigationBarTitleText: 'test'
+    }
+    components = {
+    }
+
+    // mixins = [testMixin]
+
+    data = {
+    }
+
+    computed = {
+      now () {
+        return +new Date()
+      }
+    }
+
+    methods = {
+    }
+
+    events = {
+    }
+
+    onLoad() {
+    }
+  }
+</script>
+
+<style lang="stylus">
+</style>
