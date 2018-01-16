@@ -1,5 +1,5 @@
 .wepycache
-/src/.leancloud.config.js
+src/leancloud.config.js
 .DS_Store
 node_modules/
 /dist/
