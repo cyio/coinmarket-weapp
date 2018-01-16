@@ -1,26 +1,29 @@
 <template>
   <view class="container">
     <view class="info" wx:if="{{!loading}}">
-      <text>总市值：{{global.total_market_cap_cny}} </text>
-      <text>BTC占比：{{global.bitcoin_percentage_of_market_cap}}% </text>
-      <text>更新时间：{{global.last_updated}}</text>
+      <text>总市值：<text class="highlight">{{global.totalMarketCap}} </text></text>
+      <text>BTC占比：<text class="highlight">{{global.bitcoin_percentage_of_market_cap}}% </text></text>
+      <text>更新时间：<text class="highlight">{{global.lastUpdated}} </text></text>
     </view>
 		<view class="table" wx:if="{{!loading}}">
-			<view class="tr bg-w">
-				<view class="th h-rank">排名</view>
-				<view class="th h-name">名称</view>
-				<view class="th h-price">最新价</view>
-				<view class="th h-change">涨跌</view>
-			</view>
+      <view class="tr bg-w">
+        <view class="th h-rank">排名</view>
+        <view class="th h-name">名称</view>
+        <view class="th h-price">最新价￥</view>
+        <view class="th h-change">涨跌24H</view>
+      </view>
       <block wx:for="{{tickers}}" wx:key="{{rank}}">
-				<view class="tr">
-					<view class="td h-rank">{{item.rank}}</view>
-					<view class="td">{{item.symbol}}</view>
-					<view class="td align-right">{{util.format(item.price_cny)}}</view>
-					<view class="td align-right">{{item.percent_change_24h}}</view>
-				</view>
-			</block>
-		</view>
+        <view class="tr {{ index % 2 ? 'bg-g' : ''}}">
+          <view class="td h-rank">{{item.rank}}</view>
+          <view class="td">{{item.symbol}}</view>
+          <view class="td align-right">{{item.priceCny}}</view>
+          <view class="td align-right {{item.percentChange24h >=0 ? 'up': 'down' }}">{{item.percentChange24h}}</view>
+        </view>
+      </block>
+    </view>
+    <loading hidden="{{!loading}}">
+      加载中...
+    </loading>
   </view>
 	<wxs module="util">
     var format = function(value)  {
@@ -35,12 +38,15 @@ import wepy from 'wepy'
 import AV from 'leancloud-storage/dist/av-weapp-min.js'
 import leancloudConfig from '../leancloud.config.js'
 AV.init(leancloudConfig)
+import numeral from 'numeral'
+import Timeago from 'timeago.js'
+const timeAgo = new Timeago()
 // import List from '../components/list'
 // import testMixin from '../mixins/test'
 
 export default class Index extends wepy.page {
   config = {
-    navigationBarTitleText: 'CoinMarket Lite'
+    navigationBarTitleText: '币值轻快版'
   }
   components = {
   }
@@ -77,20 +83,36 @@ export default class Index extends wepy.page {
   }
 
   methods = {
+    format (value, unit) {
+      if (unit === 'btc') return numeral(value * 10 ** 6).format('0,000,000.00')
+      return numeral(value).format('0,0.00')
+    },
+    timeFormat (time, locale) {
+      return timeAgo.format(new Date(time * 1000), locale)
+    }
   }
 
   events = {
   }
 
   onLoad() {
-    // wepy.request('http://coin.leanapp.cn/api/coinmarketcap').then((d) => console.log(d))
     new AV.Query('Data')
       .get('5a5c5c71ac502e0042f62b60')
       .then(res => {
         console.log(res.id, res.get('content'))
         const data = res.get('content')
-        this.global = data.global
-        this.tickers = data.tickers
+        this.global = {
+          ...data.global,
+          totalMarketCap: '¥' + numeral(data.global.total_market_cap_cny / (10 ** 8)).format('0,000.00') + '亿',
+          lastUpdated: this.methods.timeFormat(data.global.last_updated, 'zh_CN')
+        }
+        this.tickers = data.tickers.map((ticker, index) => {
+          return {
+            ...ticker,
+            priceCny: this.methods.format(ticker.price_cny, 'cny'),
+            percentChange24h: this.methods.format(ticker.percent_change_24h)
+          }
+        })
         this.loading = false
         this.$apply()
       })
@@ -119,7 +141,7 @@ export default class Index extends wepy.page {
     text-indent: 1rem;
   }
   .bg-w{
-		background: #e0e9f3;
+    background: #e0e9f3;
   }
   .bg-g{
     background: #F5F5F5;
@@ -132,45 +154,46 @@ export default class Index extends wepy.page {
     height: 3rem;
     align-items: center;
   }
-	.info {
-		margin-left: 10rpx;
-		font-size: 34rpx;
-		color: #a2a2a2;
-	}
-	.info text {
-		color: theme
-	}
-	.table {
-		white-space: nowrap;
-	}
-	.table th {
-	}
-	.table td, .table th {
-		text-indent: .05rem;
-	}
-	.align-right {
-		text-align: right;
-		transform: translateX(-15%);
-	}
-	.headorder .f-left {
-		text-align: left;
-	}
-	.item td {
-	}
-	.up {
-		color: green;
-	}
-	.down {
-		color: red;
-	}
-	.change {
-		width: .5rem;
-	}
-	.h-rank {
-	  width: 15%;
-	}
-	.h-change {
-	}
-	.h-price {
-	}
+  .info {
+    margin-left: 10rpx;
+    margin-bottom: 10rpx;
+    font-size: 30rpx;
+    color: #a2a2a2;
+  }
+  .info .highlight {
+    color: theme
+  }
+  .table {
+    white-space: nowrap;
+  }
+  .table th {
+  }
+  .table td, .table th {
+    text-indent: .05rem;
+  }
+  .align-right {
+    text-align: right;
+    transform: translateX(-15%);
+  }
+  .headorder .f-left {
+    text-align: left;
+  }
+  .item td {
+  }
+  .up {
+    color: green;
+  }
+  .down {
+    color: red;
+  }
+  .change {
+    width: .5rem;
+  }
+  .h-rank {
+    width: 15%;
+  }
+  .h-change {
+  }
+  .h-price {
+  }
 </style>
