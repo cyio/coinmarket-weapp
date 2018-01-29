@@ -8,6 +8,8 @@ export default class extends wepy.app {
       'pages/index'
     ],
     window: {
+      // navigationStyle: 'custom",
+      enablePullDownRefresh: true,
       backgroundTextStyle: 'light',
       navigationBarBackgroundColor: '#fff',
       navigationBarTitleText: 'WeChat',

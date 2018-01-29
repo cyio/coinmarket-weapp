@@ -1,5 +1,5 @@
 {
-  "name": "coin-market-weapp",
+  "name": "coinmarket-weapp",
   "version": "1.2.8",
   "description": "",
   "main": "dist/app.js",
@@ -8,7 +8,7 @@
     "build": "cross-env NODE_ENV=production wepy build --no-cache",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "cyio <icaner@qq.com>",
   "license": "MIT",
   "dependencies": {
     "leancloud-storage": "^3.5.0",

@@ -17,7 +17,7 @@
           <view class="td h-rank">{{item.rank}}</view>
           <view class="td">{{item.symbol}}</view>
           <view class="td align-right">{{item.priceCny}}</view>
-          <view class="td align-right {{item.percentChange24h >=0 ? 'up': 'down' }}">{{item.percentChange24h}}</view>
+          <view class="td align-right {{item.percentChange24h >=0 ? 'up': 'down' }}">{{item.percentChange24h}}%</view>
         </view>
       </block>
     </view>
@@ -89,6 +89,29 @@ export default class Index extends wepy.page {
     },
     timeFormat (time, locale) {
       return timeAgo.format(new Date(time * 1000), locale)
+    },
+    getData () {
+      new AV.Query('Data')
+        .get('5a5c5c71ac502e0042f62b60')
+        .then(res => {
+          console.log(res.id, res.get('content'))
+          const data = res.get('content')
+          this.global = {
+            ...data.global,
+            totalMarketCap: '¥' + numeral(data.global.total_market_cap_cny / (10 ** 8)).format('0,000.00') + '亿',
+            lastUpdated: this.methods.timeFormat(data.global.last_updated, 'zh_CN')
+          }
+          this.tickers = data.tickers.map((ticker, index) => {
+            return {
+              ...ticker,
+              priceCny: this.methods.format(ticker.price_cny, 'cny'),
+              percentChange24h: this.methods.format(ticker.percent_change_24h)
+            }
+          })
+          this.loading = false
+          this.$apply()
+        })
+        .catch(console.error)
     }
   }
 
@@ -117,6 +140,35 @@ export default class Index extends wepy.page {
         this.$apply()
       })
       .catch(console.error)
+  }
+
+  onPullDownRefresh() {
+    this.loading = true
+    new AV.Query('Data')
+      .get('5a5c5c71ac502e0042f62b60')
+      .then(res => {
+        wx.stopPullDownRefresh()
+        console.log(res.id, res.get('content'))
+        const data = res.get('content')
+        this.global = {
+          ...data.global,
+          totalMarketCap: '¥' + numeral(data.global.total_market_cap_cny / (10 ** 8)).format('0,000.00') + '亿',
+          lastUpdated: this.methods.timeFormat(data.global.last_updated, 'zh_CN')
+        }
+        this.tickers = data.tickers.map((ticker, index) => {
+          return {
+            ...ticker,
+            priceCny: this.methods.format(ticker.price_cny, 'cny'),
+            percentChange24h: this.methods.format(ticker.percent_change_24h)
+          }
+        })
+        this.loading = false
+        this.$apply()
+      })
+      .catch((e) => {
+        console.error(e)
+        wx.stopPullDownRefresh()
+      })
   }
 }
 </script>
